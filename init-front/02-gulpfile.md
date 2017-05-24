@@ -78,6 +78,25 @@ const baseJavascripts = require("@wandiparis/gulp-javascripts");
 const images = require("@wandiparis/gulp-images");
 const fonts = require("@wandiparis/gulp-fonts");
 const sprite = require("@wandiparis/gulp-sprite");
+const url = require('url');
+const proxy = require('proxy-middleware');
+const browserSync = require("browser-sync");
+const server = browserSync.create();
+
+function reload(done) {
+    server.reload();
+    done();
+}
+
+function serve() {
+    var proxyOptions = url.parse('your local project vhost');
+    server.init({
+        server: {
+            baseDir: "./" ,
+            middleware: [proxy(proxyOptions)]
+        }
+    });
+}
 
 const styles = baseStyles({
     src: "assets/scss/*.scss",
@@ -99,9 +118,10 @@ const compile = gulp.parallel(
 );
 
 const watch = () => {
-    gulp.watch("assets/scss/**/*.scss", styles);
+    gulp.watch("assets/scss/**/*.scss", gulp.series(styles, reload));
     gulp.watch("assets/img/**/*.{jpg,png,gif,svg}", images());
     gulp.watch("assets/img/icons/*.png", sprite());
+    gulp.watch("assets/js/**/*.js", reload);
 
     baseJavascripts({
         rootDir: __dirname,
